@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BRfinance</title>
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Recharts -->
+    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
+    <!-- Framer Motion -->
+    <script src="https://unpkg.com/framer-motion/dist/framer-motion.umd.js"></script>
+  </head>
+  <body class="bg-gray-100 text-gray-900">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect } = React;
+      const { motion } = window['framer-motion'];
+      const {
+        PieChart,
+        Pie,
+        Cell,
+        LineChart,
+        Line,
+        XAxis,
+        YAxis,
+        Tooltip,
+        CartesianGrid,
+        Legend,
+        ResponsiveContainer,
+      } = Recharts;
+
+      function App() {
+        const [salario, setSalario] = useState(
+          parseFloat(localStorage.getItem("salario")) || 0
+        );
+        const [contas, setContas] = useState(
+          JSON.parse(localStorage.getItem("contas")) || []
+        );
+        const [investimentos, setInvestimentos] = useState(
+          JSON.parse(localStorage.getItem("investimentos")) || []
+        );
+        const [aba, setAba] = useState("reparticao");
+
+        // Salvar no localStorage
+        useEffect(() => localStorage.setItem("salario", salario), [salario]);
+        useEffect(() => localStorage.setItem("contas", JSON.stringify(contas)), [contas]);
+        useEffect(
+          () => localStorage.setItem("investimentos", JSON.stringify(investimentos)),
+          [investimentos]
+        );
+
+        const reparticao = [
+          { nome: "Educação", valor: salario * 0.1, cor: "#2563eb" },
+          { nome: "Saúde", valor: salario * 0.15, cor: "#16a34a" },
+          { nome: "Investimentos", valor: salario * 0.25, cor: "#f59e0b" },
+          { nome: "Despesas", valor: salario * 0.5, cor: "#dc2626" },
+        ];
+
+        const saldoDisponivel =
+          salario - contas.filter((c) => c.paga).reduce((acc, c) => acc + c.valor, 0);
+
+        const handleAddConta = (e) => {
+          e.preventDefault();
+          const form = e.target;
+          const novaConta = {
+            id: Date.now(),
+            descricao: form.descricao.value,
+            valor: parseFloat(form.valor.value),
+            dia: form.dia.value,
+            paga: false,
+          };
+          setContas([...contas, novaConta]);
+          form.reset();
+        };
+
+        const toggleConta = (id) => {
+          setContas(
+            contas.map((c) => (c.id === id ? { ...c, paga: !c.paga } : c))
+          );
+        };
+
+        const handleAddInvestimento = (e) => {
+          e.preventDefault();
+          const form = e.target;
+          const novoInvest = {
+            id: Date.now(),
+            empresa: form.empresa.value,
+            aporte: parseFloat(form.aporte.value),
+            meses: parseInt(form.meses.value),
+          };
+          setInvestimentos([...investimentos, novoInvest]);
+          form.reset();
+        };
+
+        const cores = ["#2563eb", "#16a34a", "#f59e0b", "#dc2626"];
+
+        return (
+          <div className="max-w-5xl mx-auto p-6">
+            <header className="flex justify-between items-center mb-6">
+              <h1 className="text-3xl font-bold text-blue-600">BRfinance</h1>
+              <nav className="space-x-3">
+                <button
+                  onClick={() => setAba("reparticao")}
+                  className={`px-3 py-1 rounded ${
+                    aba === "reparticao" ? "bg-blue-600 text-white" : "bg-gray-200"
+                  }`}
+                >
+                  Repartição
+                </button>
+                <button
+                  onClick={() => setAba("contas")}
+                  className={`px-3 py-1 rounded ${
+                    aba === "contas" ? "bg-blue-600 text-white" : "bg-gray-200"
+                  }`}
+                >
+                  Contas
+                </button>
+                <button
+                  onClick={() => setAba("investimentos")}
+                  className={`px-3 py-1 rounded ${
+                    aba === "investimentos" ? "bg-blue-600 text-white" : "bg-gray-200"
+                  }`}
+                >
+                  Investimentos
+                </button>
+              </nav>
+            </header>
+
+            <main>
+              {/* Aba Repartição */}
+              {aba === "reparticao" && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  <div className="mb-4">
+                    <label className="block mb-1 font-medium">Salário</label>
+                    <input
+                      type="number"
+                      value={salario}
+                      onChange={(e) => setSalario(parseFloat(e.target.value))}
+                      className="w-full border rounded p-2"
+                    />
+                    <p className="mt-2">Saldo disponível: R$ {saldoDisponivel.toFixed(2)}</p>
+                  </div>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie data={reparticao} dataKey="valor" nameKey="nome" label>
+                        {reparticao.map((entry, index) => (
+                          <Cell key={index} fill={entry.cor} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </motion.div>
+              )}
+
+              {/* Aba Contas */}
+              {aba === "contas" && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  <form onSubmit={handleAddConta} className="space-y-2 mb-4">
+                    <input name="descricao" placeholder="Descrição" className="border p-2 w-full rounded" required />
+                    <input name="valor" type="number" step="0.01" placeholder="Valor" className="border p-2 w-full rounded" required />
+                    <input name="dia" type="number" placeholder="Dia" className="border p-2 w-full rounded" required />
+                    <button className="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Conta</button>
+                  </form>
+                  <ul className="space-y-2">
+                    {contas.map((c) => (
+                      <li key={c.id} className="flex justify-between items-center bg-white p-2 rounded shadow">
+                        <div>
+                          <p>{c.descricao} - R$ {c.valor.toFixed(2)} (dia {c.dia})</p>
+                          <p className="text-sm text-gray-500">{c.paga ? "Paga" : "Pendente"}</p>
+                        </div>
+                        <input type="checkbox" checked={c.paga} onChange={() => toggleConta(c.id)} />
+                      </li>
+                    ))}
+                  </ul>
+                </motion.div>
+              )}
+
+              {/* Aba Investimentos */}
+              {aba === "investimentos" && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  <form onSubmit={handleAddInvestimento} className="space-y-2 mb-4">
+                    <input name="empresa" placeholder="Empresa" className="border p-2 w-full rounded" required />
+                    <input name="aporte" type="number" step="0.01" placeholder="Aporte mensal" className="border p-2 w-full rounded" required />
+                    <input name="meses" type="number" placeholder="Meses" className="border p-2 w-full rounded" required />
+                    <button className="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Investimento</button>
+                  </form>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart
+                      data={investimentos.map((inv, idx) => ({
+                        nome: inv.empresa,
+                        total: inv.aporte * inv.meses,
+                      }))}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="nome" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="total" stroke="#2563eb" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </motion.div>
+              )}
+            </main>
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+    <!-- Babel CDN para JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </body>
+</html>
