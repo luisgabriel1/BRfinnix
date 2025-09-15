@@ -6,17 +6,20 @@
     <title>BRfinance</title>
     <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React CDN -->
+    <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <!-- Recharts -->
     <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
     <!-- Framer Motion -->
     <script src="https://unpkg.com/framer-motion/dist/framer-motion.umd.js"></script>
+    <!-- Babel (precisa vir DEPOIS de React) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   </head>
   <body class="bg-gray-100 text-gray-900">
     <div id="root"></div>
 
+    <!-- Código da aplicação -->
     <script type="text/babel">
       const { useState, useEffect } = React;
       const { motion } = window['framer-motion'];
@@ -46,7 +49,7 @@
         );
         const [aba, setAba] = useState("reparticao");
 
-        // Salvar no localStorage
+        // Salvar dados
         useEffect(() => localStorage.setItem("salario", salario), [salario]);
         useEffect(() => localStorage.setItem("contas", JSON.stringify(contas)), [contas]);
         useEffect(
@@ -97,8 +100,6 @@
           form.reset();
         };
 
-        const cores = ["#2563eb", "#16a34a", "#f59e0b", "#dc2626"];
-
         return (
           <div className="max-w-5xl mx-auto p-6">
             <header className="flex justify-between items-center mb-6">
@@ -132,7 +133,6 @@
             </header>
 
             <main>
-              {/* Aba Repartição */}
               {aba === "reparticao" && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <div className="mb-4">
@@ -158,7 +158,6 @@
                 </motion.div>
               )}
 
-              {/* Aba Contas */}
               {aba === "contas" && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <form onSubmit={handleAddConta} className="space-y-2 mb-4">
@@ -181,7 +180,6 @@
                 </motion.div>
               )}
 
-              {/* Aba Investimentos */}
               {aba === "investimentos" && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <form onSubmit={handleAddInvestimento} className="space-y-2 mb-4">
@@ -192,7 +190,7 @@
                   </form>
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart
-                      data={investimentos.map((inv, idx) => ({
+                      data={investimentos.map((inv) => ({
                         nome: inv.empresa,
                         total: inv.aporte * inv.meses,
                       }))}
@@ -214,7 +212,5 @@
 
       ReactDOM.createRoot(document.getElementById("root")).render(<App />);
     </script>
-    <!-- Babel CDN para JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   </body>
 </html>
